@@ -148,19 +148,13 @@ const FIT_LM_DOC = """
     """
 
 """
-    fit(LinearModel, formula::FormulaTerm, data;
-        wts::AbstractWeights=uweights(0),
-        dropcollinear::Bool=true, method::Symbol=:qr,
-        contrasts::AbstractDict{Symbol}=Dict{Symbol,Any}())
-    fit(LinearModel, X::AbstractMatrix, y::AbstractVector;
-        wts::AbstractWeights=uweights(length(y)),
-        dropcollinear::Bool=true, method::Symbol=:qr)
+    fit(LinearModel, formula::FormulaTerm, data; <keyword arguments>)
+    fit(LinearModel, X::AbstractMatrix, y::AbstractVector; <keyword arguments>)
 
 Fit a linear model to data.
 
 $FIT_LM_DOC
 """
-
 function fit(::Type{LinearModel}, X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real};
              wts::Union{AbstractWeights,AbstractVector{<:Real}}=uweights(length(y)),
              dropcollinear::Bool=true, method::Symbol=:qr)
@@ -191,18 +185,26 @@ function fit(::Type{LinearModel}, f::FormulaTerm, data;
 end
 
 """
-    lm(formula, data;
-       [wts::AbstractVector], dropcollinear::Bool=true, method::Symbol=:qr,
-       contrasts::AbstractDict{Symbol}=Dict{Symbol,Any}())
-    lm(X::AbstractMatrix, y::AbstractVector;
-       wts::AbstractVector=similar(y, 0), dropcollinear::Bool=true, method::Symbol=:cholesky)
+    lm(formula::FormulaTerm, data; <keyword arguments>)
+    lm(X::AbstractMatrix, y::AbstractVector; <keyword arguments>)
 
 Fit a linear model to data.
-An alias for `fit(LinearModel, X, y; wts=wts, dropcollinear=dropcollinear, method=method)`
+An alias for `fit(LinearModel, ...)`.
 
 $FIT_LM_DOC
 """
-lm(X, y; kwargs...) = fit(LinearModel, X, y; kwargs...)
+lm(X::AbstractMatrix, y::AbstractVector;
+   wts::Union{AbstractWeights,AbstractVector{<:Real}}=uweights(length(y)),
+   dropcollinear::Bool=true,
+   method::Symbol=:qr) =
+  fit(LinearModel, X, y; wts, dropcollinear, method)
+
+lm(f::FormulaTerm, data;
+   wts::Union{AbstractWeights,AbstractVector{<:Real}}=uweights(0),
+   dropcollinear::Bool=true,
+   method::Symbol=:qr,
+   contrasts::AbstractDict{Symbol}=Dict{Symbol,Any}()) =
+  fit(LinearModel, f, data; wts, dropcollinear, method, contrasts)
 
 dof(x::LinearModel) = linpred_rank(x.pp) + 1
 
