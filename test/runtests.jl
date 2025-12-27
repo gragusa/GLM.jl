@@ -199,19 +199,10 @@ end
     @test adjr2(lm_model) ≈ 0.832788298242634
 
     lm_model = fit(LinearModel, f, df; wts=uweights(0))
-    @test_logs (:warn,
-                "Using `wts` of zero length for unweighted regression is deprecated in favor of " *
-                "explicitly using `UnitWeights(length(y))`." *
-                " Proceeding by coercing `wts` to UnitWeights of size $(N).")
     @test GLM.weights(lm_model) == uweights(N)
 
     lm1 = fit(GeneralizedLinearModel, f, df, Normal(), IdentityLink();
               wts=pweights(df.vweights))
-    @test_logs (:warn,
-                "Passing weights as vector is deprecated in favor of explicitly using " *
-                "`AnalyticWeights`, `ProbabilityWeights`, or `FrequencyWeights`. Proceeding " *
-                "by coercing `wts` to `FrequencyWeights`")
-
     @test_throws ArgumentError loglikelihood(lm1)
     @test_throws ArgumentError nullloglikelihood(lm1)
     lm1 = fit(LinearModel, f, df; wts=pweights(df.vweights))
