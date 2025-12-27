@@ -238,7 +238,7 @@ function nulldeviance(obj::LinearModel)
             v += abs2(y[i] - m) * wts[i]
         end
     end
-    return v
+    return wts isa ProbabilityWeights ? v / (sum(wts) / length(y)) : v
 end
 
 function nullloglikelihood(m::LinearModel)
