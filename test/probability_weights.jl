@@ -30,6 +30,29 @@ itr = Iterators.product((:qr, :cholesky), (true, false))
     @test_throws ArgumentError loglikelihood(model_2)
 end
 
+@testset "Linear Model deviance/nulldeviance/r2 with ProbabilityWeights - $dmethod" for dmethod in (:qr, :cholesky)
+    # Test against R survey package:
+    # library(survey)
+    # design <- svydesign(ids = ~1, weights = ~pweights, data = df)
+    # model <- svyglm(y ~ x1 + x2, design = design, family = gaussian())
+    n = 20
+    x1 = range(0.1, 2.0, length=n)
+    x2 = repeat([0, 1], inner=div(n, 2))
+    residuals = [0.1, -0.2, 0.15, -0.1, 0.05, 0.2, -0.15, 0.1, -0.05, 0.12,
+                 -0.08, 0.18, -0.12, 0.07, -0.03, 0.11, -0.09, 0.14, -0.06, 0.08]
+    y = 1.0 .+ 0.5 .* x1 .+ 2.0 .* x2 .+ residuals
+    pw = [1.0, 2.0, 1.5, 3.0, 2.5, 1.2, 2.8, 1.8, 2.2, 1.6,
+          3.2, 1.4, 2.6, 1.9, 2.1, 1.3, 2.9, 1.7, 2.4, 2.0]
+    lm_df = DataFrame(; y=y, x1=collect(x1), x2=x2, pweights=pw)
+
+    model = lm(@formula(y ~ x1 + x2), lm_df; wts=pweights(lm_df.pweights), method=dmethod)
+    @test coef(model) ≈ [0.9469187, 0.5785940, 1.9272593] rtol=1e-5
+    @test stderror(model) ≈ [0.06528943, 0.08087196, 0.08960995] rtol=1e-5
+    @test deviance(model) ≈ 0.2451237 rtol=1e-5
+    @test nulldeviance(model) ≈ 31.66916 rtol=1e-5
+    @test r2(model) ≈ 0.9922599 rtol=1e-5
+end
+
 @testset "GLM: Binomial with LogitLink link - ProbabilityWeights with $dmethod method with dropcollinear=$drop" for (dmethod,
                                                                                                                      drop) in
                                                                                                                     itr
